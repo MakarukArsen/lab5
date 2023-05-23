@@ -3,34 +3,45 @@ const resolveBtn = document.getElementById("resolve");
 const result = document.getElementById("result");
 
 const priorities = ["!", "&&", "||", "->", "="];
-const problemArr = ["!", true, "&&", [true, "||", [false, "&&", true]], "||", false, "=", false];
+const problemArr = [
+    "!",
+    { 0: false, 1: false, 2: true, 3: true },
+    "||",
+    [{ 0: false, 1: false, 2: true, 3: true }, "||", { 0: false, 1: true, 2: false, 3: true }],
+    "=",
+    { 0: false, 1: true, 2: false, 3: true },
+];
 
-const solver = (operand1, operand2, operator) => {
-    if (operator === "!") {
-        return !operand1;
+const solver = (object1, object2, operator) => {
+    const resultObj = {};
+    for (let i = 0; i < 4; i++) {
+        if (operator === "!") {
+            resultObj[i] = !object1[i];
+        }
+        if (operator === "&&") {
+            resultObj[i] = object1[i] && object2[i];
+        }
+        if (operator === "||") {
+            resultObj[i] = object1[i] || object2[i];
+        }
+        if (operator === "->") {
+            if (object1[i] === true && object2[i] === true) resultObj[i] = true;
+            if (object1[i] === true && object2[i] === false) resultObj[i] = false;
+            if (object1[i] === false && object2[i] === true) resultObj[i] = true;
+            if (object1[i] === false && object2[i] === false) resultObj[i] = true;
+        }
+        if (operator === "=") {
+            resultObj[i] = object1[i] === object2[i];
+        }
     }
-    if (operator === "&&") {
-        return operand1 && operand2;
-    }
-    if (operator === "||") {
-        return operand1 || operand2;
-    }
-    if (operator === "->") {
-        if (operand1 === true && operand2 === true) return true;
-        if (operand1 === true && operand2 === false) return false;
-        if (operand1 === false && operand2 === true) return true;
-        if (operand1 === false && operand2 === false) return true;
-    }
-    if (operator === "=") {
-        return operand1 === operand2;
-    }
+    return resultObj;
 };
 
 const calculator = (arr) => {
     console.log(arr);
     for (let i = 0; i < arr.length; i++) {
-        if (typeof arr[i] === typeof []) {
-            arr.splice(i, 1, JSON.parse(calculator(arr[i]).join("")));
+        if (Array.isArray(arr[i])) {
+            arr.splice(i, 1, calculator(arr[i])[0]);
         }
     }
     console.log(arr);
@@ -61,10 +72,9 @@ const calculator = (arr) => {
             }
         }
     }
-    console.log(arr);
     return arr;
 };
 
 resolveBtn.addEventListener("click", () => {
-    result.innerHTML = calculator(problemArr);
+    calculator(problemArr);
 });
